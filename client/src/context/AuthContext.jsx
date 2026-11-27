@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 import {
   login as loginService,
@@ -19,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Check whether the user already has a valid session
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -31,7 +27,18 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const handleAuthRecheck = async () => {
+      setLoading(true);
+      await checkAuth();
+    };
+
     checkAuth();
+
+    window.addEventListener("auth:recheck", handleAuthRecheck);
+
+    return () => {
+      window.removeEventListener("auth:recheck", handleAuthRecheck);
+    };
   }, []);
 
   const login = async (credentials) => {
