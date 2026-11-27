@@ -75,6 +75,7 @@ const ReadingForm = ({ onReadingAdded, editingReading, onCancelEdit }) => {
       return;
     }
 
+
     try {
       setLoading(true);
 
@@ -102,15 +103,22 @@ const ReadingForm = ({ onReadingAdded, editingReading, onCancelEdit }) => {
         value: "",
       });
 
-      await onReadingAdded();
       if (editingReading) {
         onCancelEdit();
+      }
+
+      try {
+        await onReadingAdded();
+      } catch (refreshError) {
+        console.error("Dashboard refresh failed:", refreshError);
       }
     } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
     }
+
+    
   };
 
   return (
