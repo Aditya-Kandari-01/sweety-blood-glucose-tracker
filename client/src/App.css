@@ -296,3 +296,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* Reading Actions */
+
+.reading-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reading-actions button {
+  padding: 8px 16px;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.reading-actions button:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.reading-form button + button {
+  background: #64748b;
+}

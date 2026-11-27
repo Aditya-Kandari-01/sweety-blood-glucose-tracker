@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import ReadingForm from "../components/ReadingForm";
-import { getReadings } from "../services/reading.service";
+import { getReadings,deleteReading } from "../services/reading.service";
 
 const Dashboard = () => {
   const [readings, setReadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingReading, setEditingReading] = useState(null);
 
   const fetchReadings = async () => {
     try {
@@ -24,6 +25,30 @@ const Dashboard = () => {
     fetchReadings();
   }, []);
 
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this glucose reading?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteReading(id);
+      await fetchReadings();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleEdit = (reading) => {
+    setEditingReading(reading);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReading(null);
+  };
+
   return (
     <div className="dashboard">
       <Navbar />
@@ -36,7 +61,11 @@ const Dashboard = () => {
           </p>
         </section>
 
-        <ReadingForm onReadingAdded={fetchReadings} />
+        <ReadingForm
+          onReadingAdded={fetchReadings}
+          editingReading={editingReading}
+          onCancelEdit={handleCancelEdit}
+        />
 
         <section className="dashboard-overview">
           <h2>Overview</h2>
@@ -63,7 +92,19 @@ const Dashboard = () => {
                     <p>{String(reading.reading_date).slice(0, 10)}</p>
                   </div>
 
-                  <strong>{reading.value} mg/dL</strong>
+                  <div className="reading-actions">
+                    <strong>{reading.value} mg/dL</strong>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(reading)}
+                    >
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => handleDelete(reading.id)}>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -102,7 +102,13 @@ export const getReadings = async (req, res) => {
     const { date } = req.query;
 
     let query = `
-      SELECT id, reading_date, time_slot, value, created_at, updated_at
+      SELECT
+        id,
+        TO_CHAR(reading_date, 'YYYY-MM-DD') AS reading_date,
+        time_slot,
+        value,
+        created_at,
+        updated_at
       FROM glucose_readings
       WHERE user_id = $1
     `;
@@ -218,12 +224,18 @@ export const updateReading = async (req, res) => {
     // 6. Update only the authenticated user's reading
     const result = await pool.query(
       `UPDATE glucose_readings
-       SET reading_date = $1,
-           time_slot = $2,
-           value = $3,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4 AND user_id = $5
-       RETURNING id, reading_date, time_slot, value, created_at, updated_at`,
+      SET reading_date = $1,
+          time_slot = $2,
+          value = $3,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4 AND user_id = $5
+      RETURNING
+        id,
+        TO_CHAR(reading_date, 'YYYY-MM-DD') AS reading_date,
+        time_slot,
+        value,
+        created_at,
+        updated_at`,
       [reading_date, time_slot, value, id, req.user.id]
     );
 

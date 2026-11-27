@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createReading } from "../services/reading.service";
+import { useEffect, useState } from "react";
+import { createReading,updateReading} from "../services/reading.service";
 
 const getToday = () => {
   const today = new Date();
@@ -10,16 +10,31 @@ const getToday = () => {
   return `${year}-${month}-${day}`;
 };
 
-const ReadingForm = ({ onReadingAdded }) => {
+const ReadingForm = ({ onReadingAdded, editingReading, onCancelEdit }) => {
   const [formData, setFormData] = useState({
-    reading_date: getToday(),
-    time_slot: "Morning",
-    value: "",
+    reading_date: editingReading?.reading_date
+      ? String(editingReading.reading_date).slice(0, 10)
+      : getToday(),
+    time_slot: editingReading?.time_slot || "Morning",
+    value: editingReading?.value?.toString() || "",
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    setFormData({
+      reading_date: editingReading?.reading_date
+        ? String(editingReading.reading_date).slice(0, 10)
+        : getToday(),
+      time_slot: editingReading?.time_slot || "Morning",
+      value: editingReading?.value?.toString() || "",
+    });
+
+    setError("");
+    setSuccess("");
+  }, [editingReading]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -63,12 +78,23 @@ const ReadingForm = ({ onReadingAdded }) => {
     try {
       setLoading(true);
 
-      await createReading({
-        ...formData,
-        value: glucoseValue,
-      });
+      if (editingReading) {
+        await updateReading(editingReading.id, {
+          ...formData,
+          value: glucoseValue,
+        });
+      } else {
+        await createReading({
+          ...formData,
+          value: glucoseValue,
+        });
+      }
 
-      setSuccess("Glucose reading added successfully!");
+      setSuccess(
+        editingReading
+          ? "Glucose reading updated successfully!"
+          : "Glucose reading added successfully!"
+      );
 
       setFormData({
         reading_date: getToday(),
@@ -77,6 +103,9 @@ const ReadingForm = ({ onReadingAdded }) => {
       });
 
       await onReadingAdded();
+      if (editingReading) {
+        onCancelEdit();
+      }
     } catch (error) {
       setError(error.message);
     } finally {
@@ -86,7 +115,7 @@ const ReadingForm = ({ onReadingAdded }) => {
 
   return (
     <section className="reading-form-section">
-      <h2>Add Glucose Reading</h2>
+      <h2>{editingReading ? "Edit Glucose Reading" : "Add Glucose Reading"}</h2>
 
       <form onSubmit={handleSubmit} className="reading-form">
         <div className="form-group">
@@ -138,8 +167,18 @@ const ReadingForm = ({ onReadingAdded }) => {
         {success && <p className="success-message">{success}</p>}
 
         <button type="submit" disabled={loading}>
-          {loading ? "Adding..." : "Add Reading"}
+          {loading
+            ? "Saving..."
+            : editingReading
+              ? "Update Reading"
+              : "Add Reading"}
         </button>
+        {editingReading && (
+          <button type="button" onClick={onCancelEdit}>
+            Cancel
+          </button>
+        )}
+
       </form>
     </section>
   );
