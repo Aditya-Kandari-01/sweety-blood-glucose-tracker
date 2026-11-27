@@ -1,5 +1,5 @@
 import express from "express";
-import {registerUser,loginUser,logoutUser} from "../controllers/auth.controller.js";
+import { registerUser, loginUser, logoutUser } from "../controllers/auth.controller.js";
 import { authenticateUser } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.get("/me", authenticateUser, (req, res) => {
     res.status(200).json({
         success: true,
         message: "You are authenticated!",
-        userId: req.user.id,
+        user: { id: req.user.id },
     });
 });
 
