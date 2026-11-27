@@ -98,6 +98,46 @@
 }
 
 
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-card h3 {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.stat-card p {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stat-card p span {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
 
 
 /* Dashboard */
@@ -325,3 +365,4 @@
 .reading-form button + button {
   background: #64748b;
 }
+

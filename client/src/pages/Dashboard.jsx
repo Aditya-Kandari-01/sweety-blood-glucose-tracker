@@ -2,12 +2,39 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import ReadingForm from "../components/ReadingForm";
 import { getReadings,deleteReading } from "../services/reading.service";
+import { getDailyReport } from "../services/report.service";
 
 const Dashboard = () => {
   const [readings, setReadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editingReading, setEditingReading] = useState(null);
+
+  const [dailyReport, setDailyReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(true);
+  const [reportError, setReportError] = useState("");
+
+  const getToday = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getToday());
+
+
+
+
+  const refreshDashboard = async () => {
+    await Promise.all([
+      fetchReadings(),
+      fetchDailyReport(selectedDate),
+    ]);
+  };
 
   const fetchReadings = async () => {
     try {
@@ -21,9 +48,21 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchReadings();
-  }, []);
+
+  const fetchDailyReport = async (date) => {
+    try {
+      setReportError("");
+      setReportLoading(true);
+
+      const response = await getDailyReport(date);
+      setDailyReport(response.report);
+    } catch (error) {
+      setReportError(error.message);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
@@ -34,7 +73,7 @@ const Dashboard = () => {
 
     try {
       await deleteReading(id);
-      await fetchReadings();
+      await refreshDashboard();
     } catch (error) {
       setError(error.message);
     }
@@ -49,20 +88,80 @@ const Dashboard = () => {
     setEditingReading(null);
   };
 
+  useEffect(() => {
+    fetchReadings();
+  }, []);
+
+  useEffect(() => {
+    fetchDailyReport(selectedDate);
+  }, [selectedDate]);
+
   return (
     <div className="dashboard">
       <Navbar />
 
       <main className="dashboard-content">
-        <section className="dashboard-header">
-          <h1>Dashboard</h1>
-          <p>
-            Track your blood glucose readings and monitor your progress.
-          </p>
-        </section>
+        
+      <section className="dashboard-overview">
+        <h2>
+          {selectedDate === getToday()
+            ? "Today's Overview"
+            : `Overview for ${selectedDate}`}
+        </h2>
+        <div className="report-date-selector">
+          <label htmlFor="report-date">Select Date</label>
+          <input
+            type="date"
+            id="report-date"
+            value={selectedDate}
+            max={getToday()}
+            onChange={(event) => setSelectedDate(event.target.value)}
+          />
+        </div>
+
+        {reportLoading && <p>Loading statistics...</p>}
+
+        {reportError && (
+          <p className="error-message">{reportError}</p>
+        )}
+
+        {!reportLoading && !reportError && dailyReport && (
+          <div className="statistics-grid">
+            <div className="stat-card">
+              <h3>Highest</h3>
+              <p>
+                {dailyReport.statistics.highest ?? "--"}
+                <span> mg/dL</span>
+              </p>
+            </div>
+
+            <div className="stat-card">
+              <h3>Lowest</h3>
+              <p>
+                {dailyReport.statistics.lowest ?? "--"}
+                <span> mg/dL</span>
+              </p>
+            </div>
+
+            <div className="stat-card">
+              <h3>Average</h3>
+              <p>
+                {dailyReport.statistics.average ?? "--"}
+                <span> mg/dL</span>
+              </p>
+            </div>
+
+            <div className="stat-card">
+              <h3>Total Readings</h3>
+              <p>{dailyReport.statistics.count}</p>
+            </div>
+          </div>
+        )}
+      </section>
+
 
         <ReadingForm
-          onReadingAdded={fetchReadings}
+          onReadingAdded={refreshDashboard}
           editingReading={editingReading}
           onCancelEdit={handleCancelEdit}
         />
