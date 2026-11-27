@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
+import readingRoutes from "./routes/reading.routes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cookieParser());
 
 
 app.use("/api/auth", authRoutes);
+app.use("/api/readings", readingRoutes);
 
 
 app.get("/api/health", (req, res) => {
